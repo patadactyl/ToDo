@@ -1,15 +1,23 @@
 package com.example.to_dolist
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.SparseBooleanArray
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var auth: FirebaseAuth
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        auth = Firebase.auth
 
         // Initializing the array lists and the adapter
         var itemlist = arrayListOf<String>()
@@ -50,6 +58,19 @@ class MainActivity : AppCompatActivity() {
             position.clear()
             adapter.notifyDataSetChanged()
         }
+    }
+
+    public override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        val currentUser = auth.currentUser
+        if(currentUser != null){
+            reload();
+        }
+    }
+
+    private fun reload() {
+        TODO("Not yet implemented")
     }
 
 }
