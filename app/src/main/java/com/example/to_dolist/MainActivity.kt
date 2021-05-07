@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -36,6 +37,46 @@ class MainActivity : AppCompatActivity() {
         if(currentUser != null){
             reload();
         }
+    }
+
+    private fun signInAnonymously() {
+        // [START signin_anonymously]
+        auth.signInAnonymously()
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInAnonymously:success")
+                    val user = auth.currentUser
+                    updateUI(user)
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInAnonymously:failure", task.exception)
+                    Toast.makeText(baseContext, "Authentication failed.",
+                        Toast.LENGTH_SHORT).show()
+                    updateUI(null)
+                }
+            }
+        // [END signin_anonymously]
+    }
+
+    private fun linkAccount() {
+        // Create EmailAuthCredential with email and password
+        val credential = EmailAuthProvider.getCredential("", "")
+        // [START link_credential]
+        auth.currentUser!!.linkWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Log.d(TAG, "linkWithCredential:success")
+                    val user = task.result?.user
+                    updateUI(user)
+                } else {
+                    Log.w(TAG, "linkWithCredential:failure", task.exception)
+                    Toast.makeText(baseContext, "Authentication failed.",
+                        Toast.LENGTH_SHORT).show()
+                    updateUI(null)
+                }
+            }
+        // [END link_credential]
     }
 
     private fun createSignInIntent() {
@@ -129,6 +170,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val RC_SIGN_IN = 123
+
+        private const val TAG = "Anonymous User"
     }
 
 }
