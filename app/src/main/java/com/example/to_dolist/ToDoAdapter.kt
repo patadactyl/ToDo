@@ -18,9 +18,9 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-        val objectId: String = itemList[position].objectId as String
-        val itemText: String = itemList[position].itemText as String
-        val done: Boolean = itemList[position].done as Boolean
+        val objectId: String = itemList.get(position).objectId as String
+        val itemText: String = itemList.get(position).itemText as String
+        val done: Boolean = itemList.get(position).done as Boolean
         val view: View
         val vh: ListRowHolder
 
@@ -37,13 +37,13 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
 
         vh.isDone.setOnClickListener {
             rowListener.modifyItemState(objectId, !done) }
-        vh.isDeleteObject.setOnClickListener {
+        vh.ibDeleteObject.setOnClickListener {
             rowListener.onItemDelete(objectId) }
 
         return view
     }
     override fun getItem(index: Int): Any {
-        return itemList[index]
+        return itemList.get(index)
     }
     override fun getItemId(index: Int): Long {
         return index.toLong()
@@ -54,6 +54,6 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
     private class ListRowHolder(row: View?) {
         val label: TextView = row!!.findViewById<TextView>(R.id.tv_item_text) as TextView
         val isDone: CheckBox = row!!.findViewById<CheckBox>(R.id.cb_item_is_done) as CheckBox
-        val isDeleteObject: ImageButton = row!!.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
+        val ibDeleteObject: ImageButton = row!!.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
     }
 }
