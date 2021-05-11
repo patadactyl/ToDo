@@ -3,14 +3,13 @@ package com.example.to_dolist
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.provider.SyncStateContract
 import android.util.Log
 import android.view.View
 import android.widget.EditText
+import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
 import com.example.to_dolist.databinding.ActivityMainBinding
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
@@ -19,33 +18,39 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ktx.database
+import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
-import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ItemRowListener {
     private lateinit var binding: ActivityMainBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var mDatabase: DatabaseReference
+    private var toDoItemList: MutableList<ToDoModel>? = null
+    private lateinit var adapter: ToDoAdapter
+    private var listViewItems: ListView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        auth = Firebase.auth
-        createSignInIntent()
-
-        val add_btn = findViewById<View>(R.id.add_btn) as FloatingActionButton
-
-        add_btn.setOnClickListener { view ->
+        val addButton = findViewById<View>(R.id.add_btn) as FloatingActionButton
+        listViewItems = findViewById<View>(R.id.task_list) as ListView
+        addButton.setOnClickListener {
             //Show Dialog here to add new Item
             addNewItemDialog()
         }
 
         mDatabase = FirebaseDatabase.getInstance().reference
+
+        toDoItemList = mutableListOf<ToDoModel>()
+        adapter = ToDoAdapter(this, toDoItemList!!)
+        listViewItems?.adapter = adapter
+
+        mDatabase.orderByKey().addListenerForSingleValueEvent(itemListener)
+
+        auth = Firebase.auth
+        //createSignInIntent()
     }
 
     private fun addNewItemDialog() {
@@ -54,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         alert.setMessage("Add New Item")
         alert.setTitle("Enter To Do Item Text")
         alert.setView(itemEditText)
-        alert.setPositiveButton("Submit") { dialog, positiveButton ->
+        alert.setPositiveButton("Submit") { dialog, _ ->
             val todoItem = ToDoModel.create()
             todoItem.itemText = itemEditText.text.toString()
             todoItem.done = false
@@ -69,22 +74,49 @@ class MainActivity : AppCompatActivity() {
         alert.show()
     }
 
+    var itemListener: ValueEventListener = object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+            // Get Post object and use the values to update the UI
+            addDataToList(dataSnapshot)
+        }
+        override fun onCancelled(databaseError: DatabaseError) {
+            // Getting Item failed, log a message
+            Log.w("MainActivity", "loadItem:onCancelled", databaseError.toException())
+        }
+    }
+
+    private fun addDataToList(dataSnapshot: DataSnapshot) {
+        val items = dataSnapshot.children.iterator()
+        //Check if current database contains any collection
+        if (items.hasNext()) {
+            val toDoListindex = items.next()
+            val itemsIterator = toDoListindex.children.iterator()
+
+            //check if the collection has any to do items or not
+            while (itemsIterator.hasNext()) {
+                //get current item
+                val currentItem = itemsIterator.next()
+                val todoItem = ToDoModel.create()
+                //get current data in a map
+                val map = currentItem.value as HashMap<String, Any>
+                //key will return Firebase ID
+                todoItem.objectId = currentItem.key
+                todoItem.done = map["done"] as Boolean?
+                todoItem.itemText = map["itemText"] as String?
+                toDoItemList!!.add(todoItem)
+            }
+        }
+        //alert adapter that has changed
+        adapter.notifyDataSetChanged()
+    }
+
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = auth.currentUser
         if(currentUser != null){
-            reload();
+            reload()
         }
-    }
-
-    fun basicReadWrite() {
-        // [START write_message]
-        // Write a message to the database
-        val database = Firebase.database
-        val myRef = database.getReference("message")
-
-        myRef.setValue("Hello, World!")
     }
 
     private fun signInAnonymously() {
@@ -168,6 +200,18 @@ class MainActivity : AppCompatActivity() {
                 // ...
             }
         }
+    }
+
+    override fun modifyItemState(itemObjectId: String, isDone: Boolean) {
+        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
+        itemReference.child("done").setValue(isDone);
+    }
+    //delete an item
+    override fun onItemDelete(itemObjectId: String) {
+        //get child reference in database via the ObjectID
+        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
+        //deletion can be done via removeValue() method
+        itemReference.removeValue()
     }
 
     private fun updateUI(user: FirebaseUser?) {

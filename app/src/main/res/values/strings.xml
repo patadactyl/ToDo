@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">To-Do List</string>
-    <string name="no_tasks">No Tasks</string>
+    <string name="no_tasks">No Tasks
+        \n\nuse the add button to create new items</string>
 </resources>
