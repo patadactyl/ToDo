@@ -1,7 +1,6 @@
 package com.example.to_dolist
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,9 +17,9 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
 
-        val objectId: String = itemList.get(position).objectId as String
-        val itemText: String = itemList.get(position).itemText as String
-        val done: Boolean = itemList.get(position).done as Boolean
+        val objectId: String = itemList[position].objectId as String
+        val itemText: String = itemList[position].itemText as String
+        val done: Boolean = itemList[position].done as Boolean
         val view: View
         val vh: ListRowHolder
 
@@ -43,7 +42,7 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
         return view
     }
     override fun getItem(index: Int): Any {
-        return itemList.get(index)
+        return itemList[index]
     }
     override fun getItemId(index: Int): Long {
         return index.toLong()

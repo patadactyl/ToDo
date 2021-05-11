@@ -14,9 +14,7 @@ import com.example.to_dolist.databinding.ActivityMainBinding
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.*
 import com.google.firebase.ktx.Firebase
@@ -45,7 +43,7 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
 
         toDoItemList = mutableListOf<ToDoModel>()
         adapter = ToDoAdapter(this, toDoItemList!!)
-        listViewItems?.adapter = adapter
+        listViewItems!!.adapter = adapter
 
         mDatabase.orderByKey().addListenerForSingleValueEvent(itemListener)
 
@@ -74,7 +72,7 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         alert.show()
     }
 
-    var itemListener: ValueEventListener = object : ValueEventListener {
+    private var itemListener: ValueEventListener = object : ValueEventListener {
         override fun onDataChange(dataSnapshot: DataSnapshot) {
             // Get Post object and use the values to update the UI
             addDataToList(dataSnapshot)
@@ -118,7 +116,6 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             reload()
         }
     }
-
     private fun reload() {}
 
     private fun createSignInIntent() {
