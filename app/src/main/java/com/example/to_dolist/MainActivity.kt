@@ -21,6 +21,8 @@ import com.google.firebase.ktx.Firebase
 
 
 class MainActivity : AppCompatActivity(), ItemRowListener {
+
+    /*--------------- Global Variables ---------------*/
     private lateinit var binding: ActivityMainBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var mDatabase: DatabaseReference
@@ -48,8 +50,10 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         mDatabase.orderByKey().addListenerForSingleValueEvent(itemListener)
 
         auth = Firebase.auth
-        //createSignInIntent()
+        createSignInIntent()
     }
+
+    /*--------------- Add Items ---------------*/
 
     private fun addNewItemDialog() {
         val alert = AlertDialog.Builder(this)
@@ -61,16 +65,34 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             val todoItem = ToDoModel.create()
             todoItem.itemText = itemEditText.text.toString()
             todoItem.done = false
-            //We first make a push so that a new item is made with a unique ID
+            //push item to database, generates unique ID
             val newItem = mDatabase.child(Constants.FIREBASE_ITEM).push()
             todoItem.objectId = newItem.key
-            //then, we used the reference to set the value on that ID
+            //use reference to set the value on that ID
             newItem.setValue(todoItem)
             dialog.dismiss()
             Toast.makeText(this, "Item saved with ID " + todoItem.objectId, Toast.LENGTH_SHORT).show()
         }
         alert.show()
     }
+
+    /*--------------- Modify Items ---------------*/
+
+    override fun modifyItemState(itemObjectId: String, isDone: Boolean) {
+        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
+        itemReference.child("done").setValue(isDone);
+    }
+
+    /*--------------- Delete Items ---------------*/
+
+    override fun onItemDelete(itemObjectId: String) {
+        //get child reference in database via the ObjectID
+        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
+        //deletion can be done via removeValue() method
+        itemReference.removeValue()
+    }
+
+    /*--------------- Listener ---------------*/
 
     private var itemListener: ValueEventListener = object : ValueEventListener {
         override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -82,6 +104,8 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             Log.w("MainActivity", "loadItem:onCancelled", databaseError.toException())
         }
     }
+
+    /*--------------- Load Data ---------------*/
 
     private fun addDataToList(dataSnapshot: DataSnapshot) {
         val items = dataSnapshot.children.iterator()
@@ -108,6 +132,8 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         adapter.notifyDataSetChanged()
     }
 
+    /* ------------- OnBoarding ------------- */
+
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
@@ -125,7 +151,6 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             AuthUI.IdpConfig.EmailBuilder().build(),
             AuthUI.IdpConfig.GoogleBuilder().build()
         )
-
         // Create and launch sign-in intent
         startActivityForResult(
             AuthUI.getInstance()
@@ -136,7 +161,6 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
         )
         // [END auth_fui_create_intent]
     }
-
     // [START auth_fui_result]
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -156,19 +180,6 @@ class MainActivity : AppCompatActivity(), ItemRowListener {
             }
         }
     }
-
-    override fun modifyItemState(itemObjectId: String, isDone: Boolean) {
-        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
-        itemReference.child("done").setValue(isDone);
-    }
-    //delete an item
-    override fun onItemDelete(itemObjectId: String) {
-        //get child reference in database via the ObjectID
-        val itemReference = mDatabase.child(Constants.FIREBASE_ITEM).child(itemObjectId)
-        //deletion can be done via removeValue() method
-        itemReference.removeValue()
-    }
-
     companion object {
         private const val RC_SIGN_IN = 123
     }

@@ -36,7 +36,7 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
 
         vh.isDone.setOnClickListener {
             rowListener.modifyItemState(objectId, !done) }
-        vh.ibDeleteObject.setOnClickListener {
+        vh.isDeleteObject.setOnClickListener {
             rowListener.onItemDelete(objectId) }
 
         return view
@@ -53,6 +53,6 @@ class ToDoAdapter(context: Context, toDoItemList: MutableList<ToDoModel>) : Base
     private class ListRowHolder(row: View?) {
         val label: TextView = row!!.findViewById<TextView>(R.id.tv_item_text) as TextView
         val isDone: CheckBox = row!!.findViewById<CheckBox>(R.id.cb_item_is_done) as CheckBox
-        val ibDeleteObject: ImageButton = row!!.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
+        val isDeleteObject: ImageButton = row!!.findViewById<ImageButton>(R.id.iv_cross) as ImageButton
     }
 }
